@@ -44,6 +44,9 @@ func (h *ImageHandler) HandleGenerations(w http.ResponseWriter, r *http.Request)
 	if req.Size == "" {
 		req.Size = "1024x1024"
 	}
+	if req.Quality != "" {
+		req.Size = qualityToSize(req.Quality)
+	}
 
 	grsaiSize, aspectRatio := mapSize(req.Size)
 
@@ -131,6 +134,9 @@ func (h *ImageHandler) HandleEdits(w http.ResponseWriter, r *http.Request) {
 	if size == "" {
 		size = "1024x1024"
 	}
+	if quality != "" {
+		size = qualityToSize(quality)
+	}
 
 	grsaiSize, aspectRatio := mapSize(size)
 
@@ -180,6 +186,21 @@ func (h *ImageHandler) writeImageResult(w http.ResponseWriter, event *model.Draw
 		Data:    imageDatas,
 	}
 	writeJSON(w, http.StatusOK, resp)
+}
+
+// qualityToSize maps OpenAI quality to grsai size.
+// low → 1K, medium → 2K, high → 4K. Returns empty string for unknown quality.
+func qualityToSize(quality string) string {
+	switch quality {
+	case "low":
+		return "1K"
+	case "medium":
+		return "2K"
+	case "high":
+		return "4K"
+	default:
+		return ""
+	}
 }
 
 // mapSize converts OpenAI size format to grsai format (1K/2K/4K + aspect_ratio).
